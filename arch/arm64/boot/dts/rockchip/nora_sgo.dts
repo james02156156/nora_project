@@ -110,3 +110,9 @@
 		};
 	};
 };
+
+&i2c0 {
+	rk817: pmic@20 {
+		interrupts = <RK_PC1 IRQ_TYPE_LEVEL_LOW>;
+	};
+};
