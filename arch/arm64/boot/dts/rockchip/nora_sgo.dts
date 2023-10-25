@@ -163,10 +163,30 @@
 			<0 RK_PC1 RK_FUNC_GPIO &pcfg_pull_up>;
 		};
 	};
+
+	fusb0 {
+	fusb0_int: fusb0_int {
+		rockchip,pins =
+			<0 RK_PB7 RK_FUNC_GPIO &pcfg_input>;
+		};
+	};
 };
 
 &i2c0 {
 	rk817: pmic@20 {
 		interrupts = <RK_PC1 IRQ_TYPE_LEVEL_LOW>;
+
+		charger {
+			extcon = <&fusb0>;
+		};
+	};
+
+	fusb0: fusb302@22 {
+		compatible = "fairchild,fusb302";
+		reg = <0x22>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&fusb0_int>;
+		int-n-gpios = <&gpio0 RK_PB7 GPIO_ACTIVE_LOW>;
+		status = "okay";
 	};
 };
