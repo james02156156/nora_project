@@ -245,7 +245,7 @@
 
 &backlight{
 	status = "okay";
-	compatible = "rockchip,drm-backlight";
+	post-pwm-on-delay-ms = <40>;
 };
 
 
