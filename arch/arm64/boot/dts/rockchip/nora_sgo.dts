@@ -243,6 +243,26 @@
 	status = "okay";
 };
 
+&rgb_in_vopb {
+	status = "okay";
+};
+
+&rgb_in_vopl {
+	status = "disabled";
+};
+
+&dsi {
+	status = "disabled";
+};
+
+&dsi_in_vopb {
+	status = "disabled";
+};
+
+&route_dsi {
+	status = "disabled";
+};
+
 &backlight{
 	status = "okay";
 	post-pwm-on-delay-ms = <40>;
