@@ -283,3 +283,7 @@
 &io_domains {
 	vccio3-supply = <&vcc1v8_dvp>;
 };
+
+&u2phy {
+	extcon = <&fusb0>;
+};
