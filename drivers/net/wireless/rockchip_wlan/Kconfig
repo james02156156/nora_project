@@ -52,5 +52,27 @@ endif
 
 source "drivers/net/wireless/rockchip_wlan/mvl88w8977/Kconfig"
 source "drivers/net/wireless/rockchip_wlan/cywdhd/Kconfig"
+source "drivers/net/wireless/rockchip_wlan/seekwave/Kconfig"
 
 endif # WL_ROCKCHIP
+
+menuconfig SEEKWAVE_BSP_DRIVERS
+	bool "SeekWave Platform Drivers For SeekWave Chip"
+	default n
+	help
+	This is support seekwave chip for incard board
+	if you want to buildin bsp driver
+	please say "y"
+	Thanks.
+
+config SEEKWAVE_PLD_RELEASE
+    bool "seekwave Platfrom support chip recoverymode"
+    depends on SEEKWAVE_BSP_DRIVERS
+    default n
+
+#seekwave`s wifi bluetooth device driver etc
+if  SEEKWAVE_BSP_DRIVERS
+source "drivers/net/wireless/rockchip_wlan/sdio/Kconfig"
+source "drivers/net/wireless/rockchip_wlan/skwutil/Kconfig"
+
+endif

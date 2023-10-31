@@ -10,3 +10,13 @@ obj-$(CONFIG_RTL8822BS) += rtl8822bs/
 obj-$(CONFIG_MVL88W8977)	+= mvl88w8977/
 obj-$(CONFIG_WL_ROCKCHIP)	+= rkwifi/rk_wifi_config.o
 obj-$(CONFIG_CYW_BCMDHD)	+= cywdhd/
+obj-$(CONFIG_WLAN_VENDOR_SEEKWAVE) += seekwave/
+
+#
+#SeekWave Platform Drivers Makefile
+#
+#
+ifdef CONFIG_SEEKWAVE_BSP_DRIVERS
+obj-$(CONFIG_SKW_SDIOHAL)           += sdio/
+obj-$(CONFIG_SEEKWAVE_BSP_DRIVERS)  += skwutil/
+endif

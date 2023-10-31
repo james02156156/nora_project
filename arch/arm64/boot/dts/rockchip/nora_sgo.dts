@@ -45,6 +45,62 @@
 			};
 		};
 	};
+
+	bt-sound {
+		compatible = "simple-audio-card";
+		status = "disabled";
+		simple-audio-card,format = "dsp_b";
+		simple-audio-card,bitclock-inversion = <1>;
+		simple-audio-card,mclk-fs = <256>;
+		simple-audio-card,name = "rockchip,bt";
+		simple-audio-card,cpu {
+			sound-dai = <&i2s2_2ch>;
+		};
+		simple-audio-card,codec {
+			sound-dai = <&bt_sco>;
+		};
+	};
+
+	bt_sco: bt-sco {
+		compatible = "delta,dfbmcs320";
+		#sound-dai-cells = <0>;
+		status = "okay";
+	};
+
+
+	sdio_pwrseq: sdio-pwrseq {
+		compatible = "mmc-pwrseq-simple";
+		/*clocks = <&rk817 1>;*/
+		/*clock-names = "ext_clock";*/
+		pinctrl-names = "default";
+		pinctrl-0 = <&wifi_enable_h>;
+
+		/*
+		 * On the module itself this is one of these (depending
+		 * on the actual card populated):
+		 * - SDIO_RESET_L_WL_REG_ON
+		 * - PDN (power down when low)
+		 */
+		reset-gpios = <&gpio0 RK_PA2 GPIO_ACTIVE_LOW>; /* GPIO3_A4 */
+	};
+
+
+	wireless-wlan {
+		compatible = "seekwave,sv6160";
+		sv6160_path = "/vendor/bin/sv6160.bin";
+		sv6160_dram_path = "/vendor/etc/firmware/RAM_RW_KERNEL_DRAM";
+		sv6160_iram_path = "/vendor/etc/firmware/ROM_EXEC_KERNEL_IRAM";
+		dma_type = <1>;/*1:ADMA,2:SDMA*/
+		status = "okay";
+		gpio_host_wake = <&gpio0 RK_PA5 GPIO_ACTIVE_LOW>;
+		gpio_chip_wake = <&gpio0 RK_PA0 GPIO_ACTIVE_HIGH>;
+		gpio_chip_en = <&gpio0 RK_PA2 GPIO_ACTIVE_HIGH>;
+	};
+
+	wireless-bluetooth {
+		status = "disabled";
+	};
+
 };
 
 &chosen {
@@ -268,6 +324,11 @@
 	post-pwm-on-delay-ms = <40>;
 };
 
+&i2s2_2ch {
+	status = "okay";
+	rockchip,bclk-fs = <32>;
+	#sound-dai-cells = <0>;
+};
 
 &i2c1 {
 	status = "okay";
