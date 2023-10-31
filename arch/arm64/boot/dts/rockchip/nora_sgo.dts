@@ -279,3 +279,7 @@
 		rst_gpio_number = <&gpio0 RK_PB4 GPIO_ACTIVE_LOW>;
 	};
 };
+
+&io_domains {
+	vccio3-supply = <&vcc1v8_dvp>;
+};
