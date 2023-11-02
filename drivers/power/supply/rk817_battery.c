@@ -208,7 +208,7 @@ enum rk817_output_mode {
 	INSTANT_MODE,
 };
 
-enum rk817_battery_fields {
+enum rk817_battery_fields { 
 	ADC_SLP_RATE, BAT_CUR_ADC_EN, BAT_VOL_ADC_EN,
 	USB_VOL_ADC_EN, TS_ADC_EN, SYS_VOL_ADC_EN, GG_EN, /*ADC_CONFIG0*/
 	CUR_ADC_DITH_SEL, CUR_ADC_DIH_EN, CUR_ADC_CHOP_EN,
@@ -2885,6 +2885,87 @@ static void rk817_bat_output_info(struct rk817_battery_device *battery)
 	DBG("info END.\n");
 }
 
+/* reference: ntc_thermistor.c */
+struct ntc_compensation {
+	int		temp_c;
+	unsigned int	ohm;
+};
+
+static const struct ntc_compensation ntc_table[] = {
+	{ .temp_c	= -40, .ohm	= 247565 },
+	{ .temp_c	= -35, .ohm	= 181742 },
+	{ .temp_c	= -30, .ohm	= 135128 },
+	{ .temp_c	= -25, .ohm	= 101678 },
+	{ .temp_c	= -20, .ohm	= 77373 },
+	{ .temp_c	= -15, .ohm	= 59504 },
+	{ .temp_c	= -10, .ohm	= 46222 },
+	{ .temp_c	= -5, .ohm	= 36244 },
+	{ .temp_c	= 0, .ohm	= 28674 },
+	{ .temp_c	= 5, .ohm	= 22878 },
+	{ .temp_c	= 10, .ohm	= 18399 },
+	{ .temp_c	= 15, .ohm	= 14910 },
+	{ .temp_c	= 20, .ohm	= 12169 },
+	{ .temp_c	= 25, .ohm	= 10000 },
+	{ .temp_c	= 30, .ohm	= 8271 },
+	{ .temp_c	= 35, .ohm	= 6883 },
+	{ .temp_c	= 40, .ohm	= 5762 },
+	{ .temp_c	= 45, .ohm	= 4851 },
+	{ .temp_c	= 50, .ohm	= 4105 },
+	{ .temp_c	= 55, .ohm	= 3492 },
+	{ .temp_c	= 60, .ohm	= 2985 },
+	{ .temp_c	= 65, .ohm	= 2563 },
+	{ .temp_c	= 70, .ohm	= 2211 },
+	{ .temp_c	= 75, .ohm	= 1915 },
+	{ .temp_c	= 80, .ohm	= 1666 },
+	{ .temp_c	= 85, .ohm	= 1454 },
+	{ .temp_c	= 90, .ohm	= 1275 },
+	{ .temp_c	= 95, .ohm	= 1121 },
+	{ .temp_c	= 100, .ohm	= 990 },
+	{ .temp_c	= 105, .ohm	= 876 },
+	{ .temp_c	= 110, .ohm	= 779 },
+	{ .temp_c	= 115, .ohm	= 694 },
+	{ .temp_c	= 120, .ohm	= 620 },
+	{ .temp_c	= 125, .ohm	= 556 },
+};
+
+static void rk817_battery_temperature_update(struct rk817_battery_device *battery)
+{
+	int val, i;
+	unsigned int ohm;
+
+	val = rk817_bat_field_read(battery, BAT_TS_H);
+	if (val < 0)
+		return;
+	val = val << 8;
+	val |= rk817_bat_field_read(battery, BAT_TS_L);
+
+	/*
+	 * VOL_ADC_TSCUR_SEL = 10uA, REF_ADC_SEL = 1.2V
+	 * ohm = (adc_value / 65535) * 1.2V / 10uA
+	*/
+	ohm = (__u64)val * 120000 / 65536;
+
+	// TODO: boundary check
+	for (i = 0; i < (ARRAY_SIZE(ntc_table) - 1); i++)
+	{
+		if ((ohm > ntc_table[i+1].ohm) && (ohm <= ntc_table[i].ohm))
+		{
+			if (ohm == ntc_table[i].ohm)
+			{
+				battery->temperature = ntc_table[i].temp_c * 10;
+			}
+			else
+			{
+				battery->temperature = ntc_table[i+1].temp_c * 10 +
+					((ntc_table[i].temp_c - ntc_table[i+1].temp_c) *
+					10 * ((int)ohm - (int)ntc_table[i+1].ohm)) /
+					((int)ntc_table[i].ohm - (int)ntc_table[i+1].ohm);
+			}
+			break;
+		}
+	}
+}
+
 static void rk817_battery_work(struct work_struct *work)
 {
 	struct rk817_battery_device *battery =
@@ -2898,6 +2979,7 @@ static void rk817_battery_work(struct work_struct *work)
 	rk817_bat_power_supply_changed(battery);
 	rk817_bat_save_data(battery);
 	rk817_bat_output_info(battery);
+	rk817_battery_temperature_update(battery);
 
 	if (rk817_bat_field_read(battery, CUR_CALIB_UPD)) {
 		rk817_bat_current_calibration(battery);
