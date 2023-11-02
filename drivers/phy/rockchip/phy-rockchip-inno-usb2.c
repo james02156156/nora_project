@@ -999,6 +999,39 @@ static struct attribute_group usb2_phy_attr_group = {
 	.attrs = usb2_phy_attrs,
 };
 
+/*
+ * PEGA: Nora has no USB_ID pin, use this function to change USB_ID
+*/
+static void pega_fake_usbid(struct rockchip_usb2phy_port *rport, enum usb_dr_mode mode)
+{
+	struct rockchip_usb2phy *rphy = dev_get_drvdata(rport->phy->dev.parent);
+
+	if (!rphy->edev_self)
+	{
+		struct regmap *base = get_reg_base(rphy);
+		switch (mode)
+		{
+
+			case USB_DR_MODE_HOST:
+				property_enable(base, &rport->port_cfg->iddig_output, false);
+				property_enable(base, &rport->port_cfg->iddig_en, true);
+				break;
+
+			case USB_DR_MODE_PERIPHERAL:
+				property_enable(base, &rport->port_cfg->iddig_output, true);
+				property_enable(base, &rport->port_cfg->iddig_en, true);
+				break;
+
+			case USB_DR_MODE_OTG:
+			case USB_DR_MODE_UNKNOWN:
+			default:
+				property_enable(base, &rport->port_cfg->iddig_output, false);
+				property_enable(base, &rport->port_cfg->iddig_en, false);
+				break;
+		}
+	}
+}
+
 static void rockchip_usb2phy_otg_sm_work(struct work_struct *work)
 {
 	struct rockchip_usb2phy_port *rport =
@@ -1042,6 +1075,7 @@ static void rockchip_usb2phy_otg_sm_work(struct work_struct *work)
 			rphy->chg_type = POWER_SUPPLY_TYPE_UNKNOWN;
 			mutex_unlock(&rport->mutex);
 			rockchip_usb2phy_power_on(rport->phy);
+			pega_fake_usbid(rport, USB_DR_MODE_HOST);
 			return;
 		} else if (rport->vbus_attached) {
 			dev_dbg(&rport->phy->dev, "vbus_attach\n");
@@ -1062,6 +1096,7 @@ static void rockchip_usb2phy_otg_sm_work(struct work_struct *work)
 					rport->state = OTG_STATE_B_PERIPHERAL;
 					rport->perip_connected = true;
 					sch_work = true;
+					pega_fake_usbid(rport, USB_DR_MODE_PERIPHERAL);
 					break;
 				case POWER_SUPPLY_TYPE_USB_DCP:
 					dev_dbg(&rport->phy->dev, "dcp cable is connected\n");
@@ -1078,6 +1113,7 @@ static void rockchip_usb2phy_otg_sm_work(struct work_struct *work)
 					rport->state = OTG_STATE_B_PERIPHERAL;
 					rport->perip_connected = true;
 					sch_work = true;
+					pega_fake_usbid(rport, USB_DR_MODE_PERIPHERAL);
 					break;
 				default:
 					break;
@@ -1106,6 +1142,7 @@ static void rockchip_usb2phy_otg_sm_work(struct work_struct *work)
 			rphy->chg_type = POWER_SUPPLY_TYPE_UNKNOWN;
 			rport->perip_connected = false;
 			sch_work = false;
+			pega_fake_usbid(rport, USB_DR_MODE_HOST);
 			wake_unlock(&rport->wakelock);
 		} else if (!rport->vbus_attached) {
 			dev_dbg(&rport->phy->dev, "usb disconnect\n");
@@ -1114,6 +1151,7 @@ static void rockchip_usb2phy_otg_sm_work(struct work_struct *work)
 			rphy->chg_state = USB_CHG_STATE_UNDEFINED;
 			rphy->chg_type = POWER_SUPPLY_TYPE_UNKNOWN;
 			delay = OTG_SCHEDULE_DELAY;
+			pega_fake_usbid(rport, USB_DR_MODE_OTG);
 			wake_unlock(&rport->wakelock);
 		}
 		break;
@@ -1122,6 +1160,7 @@ static void rockchip_usb2phy_otg_sm_work(struct work_struct *work)
 			dev_dbg(&rport->phy->dev, "usb otg host disconnect\n");
 			rport->state = OTG_STATE_B_IDLE;
 			sch_work = true;
+			pega_fake_usbid(rport, USB_DR_MODE_OTG);
 		} else {
 			mutex_unlock(&rport->mutex);
 			return;
