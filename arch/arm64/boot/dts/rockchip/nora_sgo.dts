@@ -332,11 +332,16 @@
 
 &i2c1 {
 	status = "okay";
-	gsl3673: gsl3673@40 {
+
+	ts@40 {
+		status = "disabled";
+	};
+
+	gsl1680: gsl1680@40 {
 		status = "okay";
-		compatible = "GSL,GSL3673";
+		compatible = "gslX680";
 		reg = <0x40>;
-		irq_gpio_number = <&gpio3 RK_PB1 GPIO_ACTIVE_HIGH>;
+		irq_gpio_number = <&gpio3 RK_PB1 IRQ_TYPE_LEVEL_HIGH>;
 		rst_gpio_number = <&gpio0 RK_PB4 GPIO_ACTIVE_LOW>;
 	};
 };

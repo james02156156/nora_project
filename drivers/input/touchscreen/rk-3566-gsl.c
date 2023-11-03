@@ -41,7 +41,7 @@ static char chip_type;
 		#define PMU_GPIO_NUM    2
 #endif
 
-#include "rk-3566-gsl.h"
+#include "gslx680_nora.h"
 
 //#define X_POL
 //#define Y_POL
@@ -1217,7 +1217,7 @@ static const struct dev_pm_ops gsl_ts_pm = {
 };
 
 static const struct of_device_id gsl_ts_ids[] = {
-	{.compatible = "GSL,GSL3673"},
+	{.compatible = "gslX680"},
 	{ }
 };
 
