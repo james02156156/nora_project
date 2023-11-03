@@ -353,3 +353,9 @@
 &u2phy {
 	extcon = <&fusb0>;
 };
+
+&uart0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart0_xfer &uart0_cts>;
+	status = "okay";
+};
