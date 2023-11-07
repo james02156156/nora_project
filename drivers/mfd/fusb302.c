@@ -333,6 +333,16 @@ static void platform_fusb_notify(struct fusb30x_chip *chip)
 					    EXTCON_PROP_USB_TYPEC_POLARITY,
 					    property);
 			extcon_sync(chip->extcon, EXTCON_CHG_USB_FAST);
+			dev_info(chip->dev, "PD sink %dmV/%dmA\n", chip->pd_output_vol, chip->pd_output_cur);
+		}
+		else
+		{
+			extcon_set_state(chip->extcon, EXTCON_CHG_USB_FAST, false);
+			property.intval = 0;
+			extcon_set_property(chip->extcon, EXTCON_CHG_USB_FAST,
+					    EXTCON_PROP_USB_TYPEC_POLARITY,
+					    property);
+			extcon_sync(chip->extcon, EXTCON_CHG_USB_FAST);
 		}
 	}
 }
@@ -913,6 +923,8 @@ static void set_state_unattached(struct fusb30x_chip *chip)
 
 	/* claer notify_info */
 	memset(&chip->notify, 0, sizeof(struct notify_info));
+	chip->pd_output_cur = 0;
+	chip->pd_output_vol = 0;
 	platform_fusb_notify(chip);
 
 	if (chip->gpio_discharge)
@@ -2543,6 +2555,11 @@ static void fusb_state_snk_evaluate_caps(struct fusb30x_chip *chip, u32 evt)
 		chip->pos_power = 0;
 		set_state(chip, policy_snk_wait_caps);
 	} else {
+		if (chip->pd_output_cur == 0)
+		{
+			chip->pd_output_vol = CAP_FPDO_VOLTAGE(chip->rec_load[chip->pos_power - 1]) * 50;
+			chip->pd_output_cur = CAP_FPDO_CURRENT(chip->rec_load[chip->pos_power - 1]) * 10;
+		}
 		set_state(chip, policy_snk_select_cap);
 	}
 }

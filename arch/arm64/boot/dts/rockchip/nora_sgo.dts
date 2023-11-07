@@ -257,10 +257,10 @@
 	};
 
 	fusb0 {
-	fusb0_int: fusb0_int {
-		rockchip,pins =
-			<0 RK_PB7 RK_FUNC_GPIO &pcfg_input>;
-		};
+		fusb0_int: fusb0-int {
+			rockchip,pins =
+				<0 RK_PB7 RK_FUNC_GPIO &pcfg_pull_up>;
+			};
 	};
 };
 
@@ -278,7 +278,12 @@
 		reg = <0x22>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&fusb0_int>;
+		interrupt-parent = <&gpio0>;
+		interrupts = <RK_PB7 IRQ_TYPE_LEVEL_LOW>;
 		int-n-gpios = <&gpio0 RK_PB7 GPIO_ACTIVE_LOW>;
+		charge-dev = <&rk817>;
+		fusb302,role = "ROLE_MODE_DRP";
+		fusb302,try_role = "ROLE_MODE_UFP";
 		status = "okay";
 	};
 };

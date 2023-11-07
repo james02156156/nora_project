@@ -188,6 +188,7 @@ enum charger_t {
 	USB_TYPE_USB_CHARGER,
 	USB_TYPE_AC_CHARGER,
 	USB_TYPE_CDP_CHARGER,
+	USB_PD_CHARGER,
 	DC_TYPE_DC_CHARGER,
 	DC_TYPE_NONE_CHARGER,
 };
@@ -304,10 +305,12 @@ struct rk817_charger {
 	struct delayed_work host_work;
 	struct delayed_work discnt_work;
 	struct delayed_work irq_work;
+	struct delayed_work pd_work;
 	struct notifier_block bc_nb;
 	struct notifier_block cable_cg_nb;
 	struct notifier_block cable_host_nb;
 	struct notifier_block cable_discnt_nb;
+	struct notifier_block cable_pd_nb;
 	unsigned int bc_event;
 	enum charger_t usb_charger;
 	enum charger_t dc_charger;
@@ -333,6 +336,8 @@ struct rk817_charger {
 	u8 plugout_trigger;
 	int plugin_irq;
 	int plugout_irq;
+
+	u32 pd_max_current;
 };
 
 static enum power_supply_property rk817_ac_props[] = {
@@ -820,6 +825,15 @@ static void rk817_charge_set_chrg_param(struct rk817_charger *charge,
 		power_supply_changed(charge->usb_psy);
 		power_supply_changed(charge->ac_psy);
 		break;
+	case USB_PD_CHARGER:
+		charge->ac_in = 1;
+		charge->usb_in = 0;
+		charge->prop_status = POWER_SUPPLY_STATUS_CHARGING;
+		rk817_charge_set_input_current(charge,
+					       charge->pd_max_current);
+		power_supply_changed(charge->usb_psy);
+		power_supply_changed(charge->ac_psy);
+		break;
 	case DC_TYPE_DC_CHARGER:
 		charge->dc_in = 1;
 		charge->prop_status = POWER_SUPPLY_STATUS_CHARGING;
@@ -1042,6 +1056,9 @@ static void rk817_charger_evt_worker(struct work_struct *work)
 	static const char * const event[] = {"UN", "NONE", "USB",
 					     "AC", "CDP1.5A"};
 
+	if (charge->usb_charger == USB_PD_CHARGER)
+		return; // skip other USB charger state
+
 	/* Determine cable/charger type */
 	if (extcon_get_state(edev, EXTCON_CHG_USB_SDP) > 0)
 		charger = USB_TYPE_USB_CHARGER;
@@ -1053,6 +1070,7 @@ static void rk817_charger_evt_worker(struct work_struct *work)
 	if (charger != USB_TYPE_UNKNOWN_CHARGER) {
 		DBG("receive type-c notifier event: %s...\n",
 		    event[charger]);
+		dev_info(charge->dev, "Receive charge event: %s\n", event[charger]);
 		charge->usb_charger = charger;
 		rk817_charge_set_chrg_param(charge, charger);
 	}
@@ -1066,6 +1084,7 @@ static void rk817_charge_discnt_evt_worker(struct work_struct *work)
 	if (extcon_get_state(charge->cable_edev, EXTCON_USB) == 0) {
 		DBG("receive type-c notifier event: DISCNT...\n");
 
+		charge->usb_charger = USB_TYPE_NONE_CHARGER;
 		rk817_charge_set_chrg_param(charge, USB_TYPE_NONE_CHARGER);
 	}
 }
@@ -1152,6 +1171,46 @@ static int rk817_charge_bc_evt_notifier(struct notifier_block *nb,
 
 	charge->bc_event = event;
 	queue_delayed_work(charge->usb_charger_wq, &charge->usb_work,
+			   msecs_to_jiffies(10));
+
+	return NOTIFY_DONE;
+}
+
+static void rk817_pd_evt_worker(struct work_struct *work)
+{
+	struct rk817_charger *charge = container_of(work,
+						    struct rk817_charger,
+						    pd_work.work);
+	struct extcon_dev *edev = charge->cable_edev;
+	union extcon_property_value prop_val;
+	int ret;
+
+	if (charge->usb_charger == USB_PD_CHARGER)
+		return;
+
+	if (extcon_get_state(edev, EXTCON_CHG_USB_FAST) > 0) {
+		ret = extcon_get_property(edev, EXTCON_CHG_USB_FAST,
+					  EXTCON_PROP_USB_TYPEC_POLARITY,
+					  &prop_val);
+		DBG("usb pd charge...\n");
+		dev_info(charge->dev, "USB PD charge %dmV/%dmA\n", (prop_val.intval & 0xFFFF), (prop_val.intval >> 15));
+		if (ret == 0) {
+			charge->pd_max_current = prop_val.intval >> 15;
+			charge->usb_charger = USB_PD_CHARGER;
+			rk817_charge_set_chrg_param(charge, USB_PD_CHARGER);
+		}
+
+	}
+}
+
+static int rk817_pd_evt_notifier(struct notifier_block *nb,
+				   unsigned long event,
+				   void *ptr)
+{
+	struct rk817_charger *charge =
+		container_of(nb, struct rk817_charger, cable_pd_nb);
+
+	queue_delayed_work(charge->usb_charger_wq, &charge->pd_work,
 			   msecs_to_jiffies(10));
 
 	return NOTIFY_DONE;
@@ -1246,6 +1305,13 @@ static int rk817_charge_usb_init(struct rk817_charger *charge)
 						   &charge->cable_host_nb);
 			return ret;
 		}
+
+		/* Register USB PD charge worker */
+		INIT_DELAYED_WORK(&charge->pd_work, rk817_pd_evt_worker);
+		charge->cable_pd_nb.notifier_call = rk817_pd_evt_notifier;
+		extcon_register_notifier(edev,
+					 EXTCON_CHG_USB_FAST,
+					 &charge->cable_pd_nb);
 
 		charge->cable_edev = edev;
 
@@ -1645,6 +1711,7 @@ static int rk817_charge_probe(struct platform_device *pdev)
 	}
 
 	if (charge->pdata->extcon) {
+		schedule_delayed_work(&charge->pd_work, 0); // check PD before USB BC
 		schedule_delayed_work(&charge->host_work, 0);
 		schedule_delayed_work(&charge->usb_work, 0);
 	}
@@ -1662,6 +1729,7 @@ irq_fail:
 	cancel_delayed_work_sync(&charge->usb_work);
 	cancel_delayed_work_sync(&charge->dc_work);
 	cancel_delayed_work_sync(&charge->irq_work);
+	cancel_delayed_work_sync(&charge->pd_work);
 	destroy_workqueue(charge->usb_charger_wq);
 	destroy_workqueue(charge->dc_charger_wq);
 
@@ -1681,6 +1749,9 @@ irq_fail:
 		extcon_unregister_notifier(charge->cable_edev,
 					   EXTCON_USB,
 					   &charge->cable_discnt_nb);
+		extcon_unregister_notifier(charge->cable_edev,
+					   EXTCON_CHG_USB_FAST,
+					   &charge->cable_pd_nb);
 	} else {
 		rk_bc_detect_notifier_unregister(&charge->bc_nb);
 	}
