@@ -340,7 +340,7 @@ static int skw_ucom_probe(struct platform_device *pdev)
 		device_create(skw_com_class, NULL, ucom->devno, NULL, "%s", pdata->port_name);
 		if(!strncmp(pdata->port_name,"LOG",3)) {
 			skw_sdio_log_init(pdata, NULL, (void *)ucom);
-			skw_sdio_log_start_rec();
+//			skw_sdio_log_start_rec();
 		}
 		return 0;
 	}
