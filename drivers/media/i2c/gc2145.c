@@ -91,8 +91,8 @@ struct pll_ctrl_reg {
 
 static const char * const gc2145_supply_names[] = {
 	"dovdd",	/* Digital I/O power */
-	"avdd",		/* Analog power */
 	"dvdd",		/* Digital core power */
+	"avdd",		/* Analog power */
 };
 
 #define GC2145_NUM_SUPPLIES ARRAY_SIZE(gc2145_supply_names)
@@ -2629,6 +2629,85 @@ static int gc2145_init(struct v4l2_subdev *sd, u32 val)
 	return ret;
 }
 
+
+static int __gc2145_power_on(struct gc2145 *gc2145)
+{
+	int ret, i;
+	struct device *dev = &gc2145->client->dev;
+
+	dev_info(dev, "%s(%d)\n", __func__, __LINE__);
+	if (!IS_ERR(gc2145->power_gpio)) {
+		gpiod_set_value_cansleep(gc2145->power_gpio, 1);
+		usleep_range(2000, 5000);
+	}
+
+	if (!IS_ERR(gc2145->reset_gpio)) {
+		gpiod_set_value_cansleep(gc2145->reset_gpio, 0);
+		usleep_range(2000, 5000);
+		gpiod_set_value_cansleep(gc2145->reset_gpio, 1);
+		usleep_range(2000, 5000);
+	}
+
+	if (!IS_ERR(gc2145->xvclk)) {
+		ret = clk_set_rate(gc2145->xvclk, 24000000);
+		if (ret < 0)
+			dev_info(dev, "Failed to set xvclk rate (24MHz)\n");
+	}
+
+	if (!IS_ERR(gc2145->pwdn_gpio)) {
+		gpiod_set_value_cansleep(gc2145->pwdn_gpio, 1);
+		usleep_range(2000, 5000);
+	}
+
+	if (!IS_ERR(gc2145->supplies)) {
+		ret = regulator_bulk_enable(GC2145_NUM_SUPPLIES,
+			gc2145->supplies);
+		if (ret < 0)
+			dev_info(dev, "Failed to enable regulators\n");
+
+		usleep_range(20000, 50000);
+	}
+
+	if (!IS_ERR(gc2145->xvclk)) {
+		ret = clk_prepare_enable(gc2145->xvclk);
+		if (ret < 0)
+			dev_info(dev, "Failed to enable xvclk\n");
+	}
+	usleep_range(7000, 10000);
+
+	if (!IS_ERR(gc2145->pwdn_gpio)) {
+		gpiod_set_value_cansleep(gc2145->pwdn_gpio, 0);
+		usleep_range(2000, 5000);
+	}
+
+	if (!IS_ERR(gc2145->reset_gpio)) {
+		gpiod_set_value_cansleep(gc2145->reset_gpio, 0);
+		usleep_range(2000, 5000);
+	}
+	gc2145->power_on = true;
+	return 0;
+}
+
+static void __gc2145_power_off(struct gc2145 *gc2145)
+{
+	int i;
+	struct device *dev = &gc2145->client->dev;
+	
+	dev_info(&gc2145->client->dev, "%s(%d)\n", __func__, __LINE__);
+	if (!IS_ERR(gc2145->pwdn_gpio))
+		gpiod_set_value_cansleep(gc2145->pwdn_gpio, 1);
+	if (!IS_ERR(gc2145->reset_gpio))
+		gpiod_set_value_cansleep(gc2145->reset_gpio, 0);	
+	usleep_range(20000, 22000);
+	if (!IS_ERR(gc2145->xvclk))
+		clk_disable_unprepare(gc2145->xvclk);
+	usleep_range(10000, 12000);
+	if (!IS_ERR(gc2145->supplies))
+		regulator_bulk_disable(GC2145_NUM_SUPPLIES, gc2145->supplies);
+
+	gc2145->power_on = false;
+}
+
 static int gc2145_power(struct v4l2_subdev *sd, int on)
 {
 	int ret;
@@ -2636,23 +2715,27 @@ static int gc2145_power(struct v4l2_subdev *sd, int on)
 	struct i2c_client *client = gc2145->client;
 
 	dev_info(&client->dev, "%s(%d) on(%d)\n", __func__, __LINE__, on);
+	mutex_lock(&gc2145->lock);
 	if (on) {
-		if (!IS_ERR(gc2145->pwdn_gpio)) {
-			gpiod_set_value_cansleep(gc2145->pwdn_gpio, 0);
-			usleep_range(2000, 5000);
-		}
+		//if (!IS_ERR(gc2145->pwdn_gpio)) {
+		//	gpiod_set_value_cansleep(gc2145->pwdn_gpio, 0);
+		//	usleep_range(2000, 5000);
+		//}
+		__gc2145_power_on(gc2145);
 		ret = gc2145_init(sd, 0);
 		usleep_range(10000, 20000);
 		if (ret)
 			dev_err(&client->dev, "init error\n");
 		gc2145->power_on = true;
 	} else {
-		if (!IS_ERR(gc2145->pwdn_gpio)) {
-			gpiod_set_value_cansleep(gc2145->pwdn_gpio, 1);
-			usleep_range(2000, 5000);
-		}
+		//if (!IS_ERR(gc2145->pwdn_gpio)) {
+		//	gpiod_set_value_cansleep(gc2145->pwdn_gpio, 1);
+		//	usleep_range(2000, 5000);
+		//}
+		__gc2145_power_off(gc2145);
 		gc2145->power_on = false;
 	}
+	mutex_unlock(&gc2145->lock);
 	return 0;
 }
 
@@ -2736,86 +2819,13 @@ static int gc2145_detect(struct gc2145 *gc2145)
 				id, ret);
 		} else {
 			dev_info(&client->dev, "Found GC%04X sensor\n", id);
-			if (!IS_ERR(gc2145->pwdn_gpio))
-				gpiod_set_value_cansleep(gc2145->pwdn_gpio, 1);
+			//if (!IS_ERR(gc2145->pwdn_gpio))
+			//	gpiod_set_value_cansleep(gc2145->pwdn_gpio, 1);
+			__gc2145_power_off(gc2145);
 		}
 	}
 
 	return ret;
-}
-
-static int __gc2145_power_on(struct gc2145 *gc2145)
-{
-	int ret;
-	struct device *dev = &gc2145->client->dev;
-
-	dev_info(dev, "%s(%d)\n", __func__, __LINE__);
-	if (!IS_ERR(gc2145->power_gpio)) {
-		gpiod_set_value_cansleep(gc2145->power_gpio, 1);
-		usleep_range(2000, 5000);
-	}
-
-	if (!IS_ERR(gc2145->reset_gpio)) {
-		gpiod_set_value_cansleep(gc2145->reset_gpio, 0);
-		usleep_range(2000, 5000);
-		gpiod_set_value_cansleep(gc2145->reset_gpio, 1);
-		usleep_range(2000, 5000);
-	}
-
-	if (!IS_ERR(gc2145->xvclk)) {
-		ret = clk_set_rate(gc2145->xvclk, 24000000);
-		if (ret < 0)
-			dev_info(dev, "Failed to set xvclk rate (24MHz)\n");
-	}
-
-	if (!IS_ERR(gc2145->pwdn_gpio)) {
-		gpiod_set_value_cansleep(gc2145->pwdn_gpio, 1);
-		usleep_range(2000, 5000);
-	}
-
-	if (!IS_ERR(gc2145->supplies)) {
-		ret = regulator_bulk_enable(GC2145_NUM_SUPPLIES,
-			gc2145->supplies);
-		if (ret < 0)
-			dev_info(dev, "Failed to enable regulators\n");
-
-		usleep_range(20000, 50000);
-	}
-
-	if (!IS_ERR(gc2145->pwdn_gpio)) {
-		gpiod_set_value_cansleep(gc2145->pwdn_gpio, 0);
-		usleep_range(2000, 5000);
-	}
-
-	if (!IS_ERR(gc2145->reset_gpio)) {
-		gpiod_set_value_cansleep(gc2145->reset_gpio, 0);
-		usleep_range(2000, 5000);
-	}
-
-	if (!IS_ERR(gc2145->xvclk)) {
-		ret = clk_prepare_enable(gc2145->xvclk);
-		if (ret < 0)
-			dev_info(dev, "Failed to enable xvclk\n");
-	}
-	usleep_range(7000, 10000);
-	gc2145->power_on = true;
-	return 0;
-}
-
-static void __gc2145_power_off(struct gc2145 *gc2145)
-{
-	dev_info(&gc2145->client->dev, "%s(%d)\n", __func__, __LINE__);
-	if (!IS_ERR(gc2145->xvclk))
-		clk_disable_unprepare(gc2145->xvclk);
-	if (!IS_ERR(gc2145->supplies))
-		regulator_bulk_disable(GC2145_NUM_SUPPLIES, gc2145->supplies);
-	if (!IS_ERR(gc2145->pwdn_gpio))
-		gpiod_set_value_cansleep(gc2145->pwdn_gpio, 1);
-	if (!IS_ERR(gc2145->reset_gpio))
-		gpiod_set_value_cansleep(gc2145->reset_gpio, 0);
-	if (!IS_ERR(gc2145->power_gpio))
-		gpiod_set_value_cansleep(gc2145->power_gpio, 0);
-	gc2145->power_on = false;
 }
 
 static int gc2145_configure_regulators(struct gc2145 *gc2145)
@@ -2870,7 +2880,7 @@ static int gc2145_parse_of(struct gc2145 *gc2145)
 	ret = gc2145_configure_regulators(gc2145);
 	if (ret)
 		dev_info(dev, "Failed to get power regulators\n");
-
+		
 	return __gc2145_power_on(gc2145);
 }
 
