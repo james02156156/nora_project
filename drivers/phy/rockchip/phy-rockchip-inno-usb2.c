@@ -1006,7 +1006,7 @@ static void pega_fake_usbid(struct rockchip_usb2phy_port *rport, enum usb_dr_mod
 {
 	struct rockchip_usb2phy *rphy = dev_get_drvdata(rport->phy->dev.parent);
 
-	if (!rphy->edev_self)
+	if (rport->mode == USB_DR_MODE_OTG)
 	{
 		struct regmap *base = get_reg_base(rphy);
 		switch (mode)
