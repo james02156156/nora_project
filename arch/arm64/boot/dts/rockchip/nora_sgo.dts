@@ -48,7 +48,7 @@
 
 	bt-sound {
 		compatible = "simple-audio-card";
-		status = "disabled";
+		status = "okay";
 		simple-audio-card,format = "dsp_b";
 		simple-audio-card,bitclock-inversion = <1>;
 		simple-audio-card,mclk-fs = <256>;
