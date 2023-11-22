@@ -182,7 +182,7 @@
 		<2 RK_PB0 1 &pcfg_pull_down>,/* cif_sync */
 		<2 RK_PB1 1 &pcfg_pull_down>,/* cif_href */
 		<2 RK_PB2 1 &pcfg_pull_down>,/* cif_clkin */
-		<2 RK_PB3 1 &pcfg_pull_none_12ma>;/* cif_clkout */
+		<2 RK_PB3 1 &pcfg_pull_none_4ma>;/* cif_clkout */
 };
 
 &rkisp1 {
