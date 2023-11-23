@@ -103,6 +103,19 @@
 
 };
 
+&px30s_dmc_opp_table {
+		opp-800000000 {
+				opp-hz = /bits/ 64 <800000000>;
+				opp-microvolt = <950000>;
+				status = "okay";
+		};
+};
+
+&ddr4_params {
+		/* freq info, freq_0 is final frequency, unit: MHz */
+		freq_0 = <800>;
+};
+
 &chosen {
 	bootargs_ext = "androidboot.boot_devices=ff390000.dwmmc,ff3b0000.nandc";
 };
@@ -143,7 +156,7 @@
 		reg = <0x37>;
 		clocks = <&cru SCLK_CIF_OUT>;
 		clock-names = "xvclk";
-		
+
 		avdd-supply = <&vcc2v8_dvp>;
 		dovdd-supply = <&vcc1v8_dvp>;
 		dvdd-supply = <&vcc1v8_dvp>;
@@ -199,7 +212,7 @@
 			#size-cells = <0>;
 			isp0_mipi_in: endpoint@0 {
 			reg = <0>;
-			remote-endpoint = <&dphy_rx0_out>; 
+			remote-endpoint = <&dphy_rx0_out>;
 			};
 	    };
 
@@ -234,7 +247,7 @@
 				data-lanes = <1>;
 			};
 		};
-			
+
 		port@1 {
 			reg = <1>;
 			#address-cells = <1>;
@@ -244,8 +257,8 @@
 				reg = <0>;
 				remote-endpoint = <&isp0_mipi_in>;
 			};
-		};					
-	};	
+		};
+	};
 };
 
 &pinctrl {
