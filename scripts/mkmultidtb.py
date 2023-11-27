@@ -26,6 +26,9 @@ DTBS['RK3308-EVB'] = OrderedDict([('rk3308-evb-dmic-i2s-v10', '#_saradc_ch3=288'
 				  ('rk3308-evb-dmic-pdm-v10', '#_saradc_ch3=1024'),
 				  ('rk3308-evb-amic-v10', '#_saradc_ch3=407')])
 
+DTBS['nora-rk3326'] = OrderedDict([('nora_sgo', '#_saradc_ch0=1024'),
+				('nora_sgo_evt', '#_saradc_ch0=0')])
+
 def main():
     if (len(sys.argv) < 2) or (sys.argv[1] == '-h'):
         print __doc__
