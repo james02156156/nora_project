@@ -1553,6 +1553,7 @@ static void rk817_charge_irq_delay_work(struct work_struct *work)
 	} else if (charge->plugout_trigger) {
 		DBG("pmic: plug out\n");
 		charge->plugout_trigger = 0;
+		charge->usb_charger = USB_TYPE_NONE_CHARGER;
 		rk817_charge_set_chrg_param(charge, USB_TYPE_NONE_CHARGER);
 		rk817_charge_set_chrg_param(charge, DC_TYPE_NONE_CHARGER);
 	} else {

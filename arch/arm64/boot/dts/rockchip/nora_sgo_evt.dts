@@ -348,6 +348,8 @@
 		charge-dev = <&rk817>;
 		fusb302,role = "ROLE_MODE_DRP";
 		fusb302,try_role = "ROLE_MODE_UFP";
+		fairchild,int_n = <&gpio0 RK_PB7 GPIO_ACTIVE_LOW>;
+		vbus-supply = <&otg_switch>;
 		status = "okay";
 	};
 };
