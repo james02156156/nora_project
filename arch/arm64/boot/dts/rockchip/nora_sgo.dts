@@ -321,6 +321,19 @@
 				<3 RK_PD3 RK_FUNC_GPIO &pcfg_pull_none>;        /* LCDC_D23 */
 		};
 	};
+
+	emmc {
+		emmc_clk: emmc-clk {
+			rockchip,pins =
+				<1 RK_PB1 RK_FUNC_2 &pcfg_pull_none_2ma>;
+		};
+
+		emmc_rstnout: emmc-rstnout {
+			rockchip,pins =
+				<1 RK_PB3 RK_FUNC_2 &pcfg_pull_none_2ma>;
+		};
+
+	};
 };
 
 &i2c0 {
