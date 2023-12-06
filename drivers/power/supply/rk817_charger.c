@@ -1193,11 +1193,14 @@ static void rk817_pd_evt_worker(struct work_struct *work)
 					  EXTCON_PROP_USB_TYPEC_POLARITY,
 					  &prop_val);
 		DBG("usb pd charge...\n");
-		dev_info(charge->dev, "USB PD charge %dmV/%dmA\n", (prop_val.intval & 0xFFFF), (prop_val.intval >> 15));
 		if (ret == 0) {
 			charge->pd_max_current = prop_val.intval >> 15;
 			charge->usb_charger = USB_PD_CHARGER;
+			/* PEGA: Limit max USB input current to 2A for Nora. */
+			if (charge->pd_max_current > 2000)
+				charge->pd_max_current = 2000;
 			rk817_charge_set_chrg_param(charge, USB_PD_CHARGER);
+			dev_info(charge->dev, "USB PD charge %dmV/%dmA\n", (prop_val.intval & 0xFFFF), charge->pd_max_current);
 		}
 
 	}
