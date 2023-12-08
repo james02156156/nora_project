@@ -1149,7 +1149,7 @@ void send_host_suspend_indication(struct skw_sdio_data_t *skw_sdio)
 {
 	uint32_t value;
 	uint32_t timeout = 2000;
-	if(skw_sdio->gpio_out && skw_sdio->resume_com) {
+	if(skw_sdio->gpio_out >= 0 && skw_sdio->resume_com) {
 		skw_sdio_dbg("%s enter gpio=0\n", __func__);
 		skw_sdio->host_active = 0;
 		gpio_set_value(skw_sdio->gpio_out, 0);
