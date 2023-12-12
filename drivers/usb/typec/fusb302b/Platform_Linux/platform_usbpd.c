@@ -863,9 +863,10 @@ void handle_core_event(FSC_U32 event, FSC_U8 portId,
 #endif
 			set_voltage = chip->port.SrcCapsReceived[
 				chip->port.USBPDContract.FVRDO.ObjectPosition - 1].FPDOSupply.Voltage * 50;
-			// op_current = chip->port.USBPDContract.FVRDO.OpCurrent * 10;
-			op_current = chip->port.SrcCapsReceived[
-				chip->port.USBPDContract.FVRDO.ObjectPosition - 1].FPDOSupply.MaxCurrent * 10;
+			if (chip->port.USBPDContract.FVRDO.MinMaxCurrent > chip->port.USBPDContract.FVRDO.OpCurrent)
+				op_current = chip->port.USBPDContract.FVRDO.MinMaxCurrent * 10;
+			else
+				op_current = chip->port.USBPDContract.FVRDO.OpCurrent * 10;
 			if (op_current > 0) {
 				union extcon_property_value property;
 

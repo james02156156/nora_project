@@ -151,7 +151,7 @@
 #define Src_PDO_Max_Power7 0                //; 0 W
 
 /* Sink Tab */
-#define PD_Power_as_Sink 4500                //; 4500mW
+#define PD_Power_as_Sink 10000              //; 10W (5V/2A)
 #define No_USB_Suspend_May_Be_Set YES
 #define GiveBack_May_Be_Set NO
 #define Higher_Capability_Set NO
