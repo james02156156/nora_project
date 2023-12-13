@@ -160,7 +160,7 @@
 
 #define Snk_PDO_Supply_Type1 0              //; 0: Fixed
 #define Snk_PDO_Voltage1 100                //; 5V
-#define Snk_PDO_Op_Current1 150             //; 1.5A
+#define Snk_PDO_Op_Current1 200             //; 2A
 #define Snk_PDO_Min_Voltage1 0              //; 0 V
 #define Snk_PDO_Max_Voltage1 0              //; 0 V
 #define Snk_PDO_Op_Power1 0                 //; 0 W
@@ -216,8 +216,8 @@
 /* SOP Discovery - Part One Tab */
 #define Structured_VDM_Version_SOP 1        //; 1: V2.0
 #define XID_SOP 0
-#define Data_Capable_as_USB_Host_SOP NO
-#define Data_Capable_as_USB_Device_SOP NO
+#define Data_Capable_as_USB_Host_SOP YES
+#define Data_Capable_as_USB_Device_SOP YES
 #define Product_Type_UFP_SOP 0                  //; 0: Undefined
 #define Product_Type_DFP_SOP 0                  //; 0: Undefined
 #define Modal_Operation_Supported_SOP NO
