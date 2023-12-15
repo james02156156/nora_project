@@ -50,7 +50,7 @@
 /* General PD Settings Tab */
 #define PD_Specification_Revision 1         /* Revision 2.0 */
 #define SOP_Capable YES                     /* Always YES */
-#define SOP_P_Capable NO
+#define SOP_P_Capable YES
 #define SOP_PP_Capable NO
 #define SOP_P_Debug_Capable NO              /* Not Currently Implemented */
 #define SOP_PP_Debug_Capable NO             /* Not Currently Implemented */
@@ -65,13 +65,13 @@
 #define Attempts_Discov_SOP YES
 
 /* USB Type-C Tab */
-#define Type_C_Supports_Vconn_Powered_Accessory YES
+#define Type_C_Supports_Vconn_Powered_Accessory NO
 #define Type_C_Implements_Try_SRC NO
 #define Type_C_Implements_Try_SNK YES
 #define Rp_Value 0                          /* 0: Def 1: 1.5A 2: 3A Advertised*/
 #define Type_C_Is_VCONN_Powered_Accessory NO    /* Not Currently Implemented */
-#define Type_C_Is_Debug_Target_SRC YES
-#define Type_C_Is_Debug_Target_SNK YES
+#define Type_C_Is_Debug_Target_SRC NO
+#define Type_C_Is_Debug_Target_SNK NO
 #define Type_C_Can_Act_As_Host YES          /* Not Controlled by this driver */
 #define Type_C_Host_Speed 0                 /* Not Controlled by this driver */
 #define Type_C_Can_Act_As_Device YES        /* Not Controlled by this driver */
@@ -88,7 +88,7 @@
 
 /* Source Tab */
 #define PD_Power_as_Source 4500             /* 4500 mW (5V/0.9A) */
-#define USB_Suspend_May_Be_Cleared YES
+#define USB_Suspend_May_Be_Cleared NO
 
 #define Sends_Pings NO                      /* Not Currently Implemented */
 
