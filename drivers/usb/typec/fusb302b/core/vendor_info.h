@@ -44,7 +44,7 @@
 #define USB_PD_Support YES
 #define PD_Port_Type 4                /* 0: C, 1: C/P, 2: P/C, 3: P, 4: DRP */
 #define Type_C_State_Machine 2        /* 0: Src, 1: Snk, 2: DRP */
-#define Port_Battery_Powered NO
+#define Port_Battery_Powered YES
 #define BC_1_2_Support 0
 
 /* General PD Settings Tab */
@@ -80,7 +80,7 @@
 #define Type_C_Is_Alt_Mode_Device NO        /* Not Controlled by this driver */
 #define Type_C_Power_Source 0               /* Not Controlled by this driver */
 #define Type_C_BC_1_2_Support 0             /* Not Controlled by this driver */
-#define Type_C_Battery_Powered NO           /* Not Controlled by this driver */
+#define Type_C_Battery_Powered YES          /* Not Controlled by this driver */
 #define Type_C_Port_On_Hub NO               /* Not Controlled by this driver */
 #define Type_C_Supports_Audio_Accessory NO
 #define Captive_Cable NO
@@ -218,8 +218,8 @@
 #define XID_SOP 0
 #define Data_Capable_as_USB_Host_SOP YES
 #define Data_Capable_as_USB_Device_SOP YES
-#define Product_Type_UFP_SOP 0                  //; 0: Undefined
-#define Product_Type_DFP_SOP 0                  //; 0: Undefined
+#define Product_Type_UFP_SOP 2                  //; 2: Peripheral
+#define Product_Type_DFP_SOP 2                  //; 2: Host
 #define Modal_Operation_Supported_SOP NO
 #define USB_VID_SOP 0x1057
 #define PID_SOP 0x0000

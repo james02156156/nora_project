@@ -828,9 +828,9 @@ void handle_core_event(FSC_U32 event, FSC_U8 portId,
 	case PD_STATE_CHANGED:
 		pr_debug("FUSB %s:PD_STATE_CHANGED=0x%x, PE_ST=%d\n",
 			__func__, event, chip->port.PolicyState);
+#if 0 /* PEGA: replaced by PD_NEW_CONTRACT */
 		if (chip->port.PolicyState == peSinkReady &&
 			chip->port.PolicyHasContract == TRUE) {
-#if 0 /* PEGA: not supported */
 			pr_info("FUSB %s update power_supply properties\n",
 				__func__);
 
@@ -860,7 +860,21 @@ void handle_core_event(FSC_U32 event, FSC_U8 portId,
 						POWER_SUPPLY_PROP_PD_VOLTAGE_MAX, &val);
 				}
 			}
+		}
+
+		/* set typec port */
+		if ((chip->port.PolicyState == peSinkReady ||
+			chip->port.PolicyState == peSourceReady) &&
+			chip->port.PolicyHasContract == TRUE) {
+			typec_set_pwr_opmode(chip->typec_port, TYPEC_PWR_MODE_PD);
+		}
 #endif
+
+		break;
+	case PD_NEW_CONTRACT:
+		pr_debug("FUSB %s:PD_NEW_CONTRACT=0x%x, PE_ST=%d\n", __func__, event, chip->port.PolicyState);
+		if (chip->port.PolicyIsSource == FALSE)
+		{
 			set_voltage = chip->port.SrcCapsReceived[
 				chip->port.USBPDContract.FVRDO.ObjectPosition - 1].FPDOSupply.Voltage * 50;
 			op_current = chip->port.USBPDContract.FVRDO.OpCurrent * 10;
@@ -873,7 +887,7 @@ void handle_core_event(FSC_U32 event, FSC_U8 portId,
 							EXTCON_PROP_USB_TYPEC_POLARITY,
 							property);
 				extcon_sync(chip->extcon, EXTCON_CHG_USB_FAST);
-				pr_info("PD sink %dmV/%dmA\n", set_voltage, op_current);
+				pr_info("FUSB: PD sink %dmV/%dmA\n", set_voltage, op_current);
 			}
 		}
 
