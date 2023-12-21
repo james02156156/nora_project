@@ -1082,6 +1082,11 @@ static void __init px30_clk_init(struct device_node *np)
 
 	rockchip_register_restart_notifier(ctx, PX30_GLB_SRST_FST, NULL);
 
+	writel(0x1f001f00,reg_base + 0x4c);
+	writel(0x00f00010,reg_base + 0x4c);
+	writel(0x10000000,reg_base + 0x44);
+	writel(0x00070000,reg_base + 0x4c);
+
 	rockchip_clk_of_add_provider(np, ctx);
 }
 CLK_OF_DECLARE(px30_cru, "rockchip,px30-cru", px30_clk_init);
