@@ -322,6 +322,33 @@
 		};
 	};
 
+	i2s1 {
+			/* i2s1_2ch_mclk: i2s1-2ch-mclk {
+				rockchip,pins =
+					<2 RK_PC3 1 &pcfg_pull_none_2ma>;
+			}; */
+
+			i2s1_2ch_sclk: i2s1-2ch-sclk {
+				rockchip,pins =
+					<2 RK_PC2 1 &pcfg_pull_none_2ma>;
+			};
+
+			/*i2s1_2ch_lrck: i2s1-2ch-lrck {
+				rockchip,pins =
+					<2 RK_PC1 1 &pcfg_pull_none_2ma>;
+			};
+
+			i2s1_2ch_sdi: i2s1-2ch-sdi {
+				rockchip,pins =
+					<2 RK_PC5 1 &pcfg_pull_none_2ma>;
+			};
+
+			i2s1_2ch_sdo: i2s1-2ch-sdo {
+				rockchip,pins =
+					<2 RK_PC4 1 &pcfg_pull_none_2ma>;
+			};*/
+		};
+
 	i2s2 {
 		i2s2_2ch_sclk: i2s2-2ch-sclk {
 			rockchip,pins =
