@@ -23,6 +23,8 @@
 extern "C" {
 #endif
 
+#define FPDO_DUAL_ROLE_POWER    ((PD_Port_Type==4) || (((PD_Port_Type==1) || (PD_Port_Type==2)) && (Type_C_State_Machine==2)))
+
 #define PORT_SUPPLY_FIRST_FIXED(idx)\
    {.FPDOSupply = {\
                       .MaxCurrent        = Src_PDO_Max_Current##idx,\
@@ -32,7 +34,7 @@ extern "C" {
                       .USBCommCapable    = USB_Comms_Capable,\
                       .ExternallyPowered = Unconstrained_Power,\
                       .USBSuspendSupport = SWAP(USB_Suspend_May_Be_Cleared),\
-                      .DualRolePower     = Accepts_PR_Swap_As_Src,\
+                      .DualRolePower     = FPDO_DUAL_ROLE_POWER,\
                       .SupplyType        = Src_PDO_Supply_Type##idx,\
     }}
 
@@ -80,7 +82,7 @@ extern "C" {
                        .USBCommCapable     = USB_Comms_Capable,\
                        .ExternallyPowered  = Unconstrained_Power,\
                        .HigherCapability   = Higher_Capability_Set,\
-                       .DualRolePower      = Accepts_PR_Swap_As_Snk,\
+                       .DualRolePower      = FPDO_DUAL_ROLE_POWER,\
                        .SupplyType         = pdoTypeFixed,\
     }}
 
