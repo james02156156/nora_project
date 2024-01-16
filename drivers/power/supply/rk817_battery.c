@@ -2891,41 +2891,42 @@ struct ntc_compensation {
 	unsigned int	ohm;
 };
 
+/* TDK NTCG063JF103FTB */
 static const struct ntc_compensation ntc_table[] = {
-	{ .temp_c	= -40, .ohm	= 247565 },
-	{ .temp_c	= -35, .ohm	= 181742 },
-	{ .temp_c	= -30, .ohm	= 135128 },
-	{ .temp_c	= -25, .ohm	= 101678 },
-	{ .temp_c	= -20, .ohm	= 77373 },
-	{ .temp_c	= -15, .ohm	= 59504 },
-	{ .temp_c	= -10, .ohm	= 46222 },
-	{ .temp_c	= -5, .ohm	= 36244 },
-	{ .temp_c	= 0, .ohm	= 28674 },
-	{ .temp_c	= 5, .ohm	= 22878 },
-	{ .temp_c	= 10, .ohm	= 18399 },
-	{ .temp_c	= 15, .ohm	= 14910 },
-	{ .temp_c	= 20, .ohm	= 12169 },
+	{ .temp_c	= -40, .ohm	= 188500 },
+	{ .temp_c	= -35, .ohm	= 144300 },
+	{ .temp_c	= -30, .ohm	= 111300 },
+	{ .temp_c	= -25, .ohm	= 86560 },
+	{ .temp_c	= -20, .ohm	= 67790 },
+	{ .temp_c	= -15, .ohm	= 53460 },
+	{ .temp_c	= -10, .ohm	= 42450 },
+	{ .temp_c	= -5, .ohm	= 33930 },
+	{ .temp_c	= 0, .ohm	= 27280 },
+	{ .temp_c	= 5, .ohm	= 22070 },
+	{ .temp_c	= 10, .ohm	= 17960 },
+	{ .temp_c	= 15, .ohm	= 14700 },
+	{ .temp_c	= 20, .ohm	= 12090 },
 	{ .temp_c	= 25, .ohm	= 10000 },
-	{ .temp_c	= 30, .ohm	= 8271 },
-	{ .temp_c	= 35, .ohm	= 6883 },
-	{ .temp_c	= 40, .ohm	= 5762 },
-	{ .temp_c	= 45, .ohm	= 4851 },
-	{ .temp_c	= 50, .ohm	= 4105 },
-	{ .temp_c	= 55, .ohm	= 3492 },
-	{ .temp_c	= 60, .ohm	= 2985 },
-	{ .temp_c	= 65, .ohm	= 2563 },
-	{ .temp_c	= 70, .ohm	= 2211 },
-	{ .temp_c	= 75, .ohm	= 1915 },
-	{ .temp_c	= 80, .ohm	= 1666 },
-	{ .temp_c	= 85, .ohm	= 1454 },
-	{ .temp_c	= 90, .ohm	= 1275 },
-	{ .temp_c	= 95, .ohm	= 1121 },
-	{ .temp_c	= 100, .ohm	= 990 },
-	{ .temp_c	= 105, .ohm	= 876 },
-	{ .temp_c	= 110, .ohm	= 779 },
-	{ .temp_c	= 115, .ohm	= 694 },
-	{ .temp_c	= 120, .ohm	= 620 },
-	{ .temp_c	= 125, .ohm	= 556 },
+	{ .temp_c	= 30, .ohm	= 8312 },
+	{ .temp_c	= 35, .ohm	= 6942 },
+	{ .temp_c	= 40, .ohm	= 5826 },
+	{ .temp_c	= 45, .ohm	= 4911 },
+	{ .temp_c	= 50, .ohm	= 4158 },
+	{ .temp_c	= 55, .ohm	= 3536 },
+	{ .temp_c	= 60, .ohm	= 3019 },
+	{ .temp_c	= 65, .ohm	= 2588 },
+	{ .temp_c	= 70, .ohm	= 2227 },
+	{ .temp_c	= 75, .ohm	= 1924 },
+	{ .temp_c	= 80, .ohm	= 1668 },
+	{ .temp_c	= 85, .ohm	= 1451 },
+	{ .temp_c	= 90, .ohm	= 1267 },
+	{ .temp_c	= 95, .ohm	= 1110 },
+	{ .temp_c	= 100, .ohm	= 975 },
+	{ .temp_c	= 105, .ohm	= 860 },
+	{ .temp_c	= 110, .ohm	= 760 },
+	{ .temp_c	= 115, .ohm	= 674 },
+	{ .temp_c	= 120, .ohm	= 599 },
+	{ .temp_c	= 125, .ohm	= 534 },
 };
 
 static void rk817_battery_temperature_update(struct rk817_battery_device *battery)
@@ -2945,7 +2946,19 @@ static void rk817_battery_temperature_update(struct rk817_battery_device *batter
 	*/
 	ohm = (__u64)val * 120000 / 65536;
 
-	// TODO: boundary check
+	/* Handle special cases */
+	if (ohm > ntc_table[0].ohm)
+	{
+		battery->temperature = ntc_table[0].temp_c;
+		return;
+	}
+	else if (ohm < ntc_table[ARRAY_SIZE(ntc_table) - 1].ohm)
+	{
+		battery->temperature = ntc_table[ARRAY_SIZE(ntc_table) - 1].temp_c;
+		return;
+	}
+
+	/* Search ntc_table and use linear approximation for temperature */
 	for (i = 0; i < (ARRAY_SIZE(ntc_table) - 1); i++)
 	{
 		if ((ohm > ntc_table[i+1].ohm) && (ohm <= ntc_table[i].ohm))
