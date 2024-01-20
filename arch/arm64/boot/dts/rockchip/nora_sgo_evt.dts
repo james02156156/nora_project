@@ -10,10 +10,6 @@
 	model = "Rockchip rk3326 863 rkisp1 board";
 	compatible = "rockchip,rk3326-863-lp3-v10-rkisp1", "rockchip,rk3326";
 
-	fiq-debugger {
-		status = "disabled";
-	};
-
 	panel {
 		compatible = "simple-panel";
 		bus-format = <MEDIA_BUS_FMT_RGB888_1X24>;
@@ -324,6 +320,68 @@
 				<3 RK_PD2 RK_FUNC_GPIO &pcfg_pull_none>,        /* LCDC_D22 */
 				<3 RK_PD3 RK_FUNC_GPIO &pcfg_pull_none>;        /* LCDC_D23 */
 		};
+	};
+
+	i2s1 {
+			i2s1_2ch_mclk: i2s1-2ch-mclk {
+				rockchip,pins =
+					<2 RK_PC3 1 &pcfg_pull_none_2ma>;
+			};
+
+			i2s1_2ch_sclk: i2s1-2ch-sclk {
+				rockchip,pins =
+					<2 RK_PC2 1 &pcfg_pull_none_2ma>;
+			};
+
+			i2s1_2ch_lrck: i2s1-2ch-lrck {
+				rockchip,pins =
+					<2 RK_PC1 1 &pcfg_pull_none_2ma>;
+			};
+
+			i2s1_2ch_sdi: i2s1-2ch-sdi {
+				rockchip,pins =
+					<2 RK_PC5 1 &pcfg_pull_none_2ma>;
+			};
+
+			i2s1_2ch_sdo: i2s1-2ch-sdo {
+				rockchip,pins =
+					<2 RK_PC4 1 &pcfg_pull_none_2ma>;
+			};
+		};
+
+	i2s2 {
+		i2s2_2ch_sclk: i2s2-2ch-sclk {
+			rockchip,pins =
+				<3 RK_PA2 2 &pcfg_pull_none_2ma>;
+		};
+
+		i2s2_2ch_lrck: i2s2-2ch-lrck {
+			rockchip,pins =
+				<3 RK_PA3 2 &pcfg_pull_none_2ma>;
+		};
+
+		i2s2_2ch_sdi: i2s2-2ch-sdi {
+			rockchip,pins =
+				<3 RK_PA5 2 &pcfg_pull_none_2ma>;
+		};
+
+		i2s2_2ch_sdo: i2s2-2ch-sdo {
+			rockchip,pins =
+				<3 RK_PA7 2 &pcfg_pull_none_2ma>;
+		};
+	};
+
+	emmc {
+		emmc_clk: emmc-clk {
+			rockchip,pins =
+				<1 RK_PB1 RK_FUNC_2 &pcfg_pull_none_2ma>;
+		};
+
+		emmc_rstnout: emmc-rstnout {
+			rockchip,pins =
+				<1 RK_PB3 RK_FUNC_2 &pcfg_pull_none_2ma>;
+		};
+
 	};
 };
 
